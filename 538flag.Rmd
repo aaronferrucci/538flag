@@ -1,0 +1,81 @@
+---
+title: "538 Flags"
+date: "7/5/2020"
+author: "Aaron Ferrucci"
+output:
+  html_document:
+    df_print: paged
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+---
+```{r message=F, warning=F, echo=F}
+library(dplyr)
+library(ggplot2)
+library(utils)
+```
+From [538 Riddler: Can You Stay In Your Lane?](https://fivethirtyeight.com/features/can-you-stay-in-your-lane/)
+
+> The 50 stars on the American flag are arranged in such a way that they form two rectangles. The larger rectangle is 5 stars wide, 6 stars long; the smaller rectangle is embedded inside the larger and is 4 stars wide, 5 stars long. This square-like pattern of stars is possible because the number of states (50) is twice a square number (25).
+> 
+> Now that the House of Representatives has passed legislation that would make the District of Columbia the fifty-first US state — and renamed Washington, Douglass Commonwealth, in honor of Frederick Douglass — a natural question is how to aesthetically arrange 51 stars on the flag.
+> 
+> One pleasing design has a star in the middle, surrounded by concentric pentagons of increasing side length, as shown below. The innermost pentagon has five stars, and subsequent pentagons are made up of 10, 15 and 20 stars. All told, that’s 51 stars.
+> 
+> It just so happens that when N equals 50, N is twice a square and N+1 is a centered pentagonal number. After 50, what is the next integer N with these properties?
+> 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### A Simple Loop
+I'm looking for numbers N which are twice a square, where N+1 is a centered pentagonal number. "Twice a square" means there's some $n$ that satisfies  $N=2  n^2$. Meanwhile if $M$ is a centered pentagonal number, that means there's some $m$ that satisfies $M=(5  m^2 + 5  m + 2) / 2$.
+
+Simple brute force solution: in a loop, find, in increasing order, twice-squares $N$ and centered pentagonal numbers $M$; when an $M$ is found that's one greater than the previous $N$, we found one!
+
+Every "centpent" which meets the condition is marked with '+'. Just for fun, when a "twosquare" is one greater than the previous centpent, I print a '*' (this is not a solution to the problem, though, the instructions are clear). Turns out 51 is the _second_ satisfying centpent; the loop stops when it finds the third one.
+
+```{r}
+solution <- NA
+m <- 0
+n <- 0
+lastprint <- 100
+done <- 0
+find <- 3
+for (i in 0:1000) {
+  ts <- 2*m*m
+  cp <- (5*n*n + 5*n + 2) / 2
+  # print any that are not larger
+  if (ts <= cp) {
+    print(sprintf("%d    twosquare(%d)%s", ts, m, ifelse(ts == lastprint + 1, " *", "")), quote=F)
+    m <- m + 1
+    lastprint <- ts
+  }
+  if (cp <= ts) {
+    if (cp == lastprint + 1) {
+      find <- find - 1
+      if (find == 0) {
+        solution <- lastprint # note subtlety: we can assume lastprint is a twosquare
+        done <- 1
+      }
+    }
+    print(sprintf("%d    centpent(%d)%s", cp, n, ifelse(cp == lastprint + 1, " +", "")), quote=F)
+    n <- n + 1
+    lastprint <- cp
+  }
+  
+  if (done)
+    break
+}
+
+if (is.na(solution)) {
+  print("No solution found!", quote=F)
+} else {
+  print(sprintf("Solution: %d", solution), quote=F)
+}
+```
+
+
